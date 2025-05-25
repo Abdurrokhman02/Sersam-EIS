@@ -3,7 +3,7 @@
 #include <UniversalTelegramBot.h>
 
 // pin yang digunakan
-// ultrasonik sensorn ketinggian air
+// ultrasonik sensor ketinggian air
 #define trigPinWater 5
 #define echoPinWater 18
 
@@ -16,6 +16,11 @@ const char* grup_id = "-4721702872";
 // inisialisasi library 
 WiFiClientSecure client;
 UniversalTelegramBot bot(botToken, client);
+
+// variabel global untuk menyimpan ketinggian air sebelumnya
+float lastWaterLevel = -1;
+
+bool wasInDanger = false; // status air sebelumnya
 
 // perhitungan sensor ultrasonik untuk ketinggian air
 float WaterDistance(){
@@ -53,12 +58,32 @@ void loop() {
   Serial.print(water);
   Serial.println(" cm");
   
-  // kondisi ketika air meluap
-  if (water <= 10){
-    String message = "WASPADA!! ketinggian air ";
-    message += String(water); // Mengonversi float ke String
-    message += " cm dari permukaan tanah";
-    bot.sendMessage(grup_id, message, ""); //kirim pesan ke grup telegram melalui grup id
+  // perbandingan antara ketinggian air sekarang dengan sebelumnya
+  //untuk mengurangi spam
+  float diff = abs(water - lastWaterLevel);
+
+  // Kondisi BAHAYA: air meluap <= 10cm dari sensor
+  if (water <= 10) {
+    if ((!wasInDanger || diff >= 5) && lastWaterLevel >= 0) {
+      String message = "WASPADA!! Ketinggian air ";
+      message += String(water, 2);
+      message += " cm dari permukaan tanah.";
+      bot.sendMessage(grup_id, message, ""); // kirim pesan ke grup telegram
+    }
+    wasInDanger = true;
   }
+  // Kondisi NORMAL: air surut > 10cm
+  else {
+    if (wasInDanger && water > 10) {
+      String message = "Ketinggian air telah kembali normal: ";
+      message += String(water, 2);SSSSSS
+      message += " cm dari permukaan tanah.";
+      bot.sendMessage(grup_id, message, "");
+    }
+    wasInDanger = false;
+  }
+
+  lastWaterLevel = water;
   delay(1000);
+
 }
