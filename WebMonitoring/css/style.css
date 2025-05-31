@@ -1,0 +1,298 @@
+/* Konten dari WebMonitoring/Style.css Anda, disesuaikan dan diperluas */
+body {
+    font-family: 'Roboto', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background-color: #008080; /* Latar belakang hijau tua untuk seluruh halaman */
+    margin: 0;
+    padding: 0;
+    color: #333333;
+    display: flex;
+    justify-content: center;
+    align-items: flex-start;
+    min-height: 100vh;
+    padding-top: 20px;
+    box-sizing: border-box;
+}
+
+.page-container {
+    width: 100%;
+    max-width: 1200px;
+    display: flex;
+    flex-direction: column;
+}
+
+.desktop-title {
+    font-size: 14px;
+    color: #B0BEC5; /* Warna abu-abu muda untuk "Desktop - 1" */
+    margin-bottom: 8px;
+    padding-left: 20px;
+}
+
+.dashboard-container {
+    background: linear-gradient(to bottom, #13c2c2, #0d5093); /* Gradasi hijau muda untuk blok konten utama */
+    border-radius: 15px;
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.2);
+    overflow: hidden;
+    width: 100%;
+}
+
+/* Header Section dari UI Gambar */
+.sersam-header-main {
+    background-color: #008080; /* Hijau sedang untuk header */
+    color: white;
+    padding: 25px 30px;
+}
+
+.header-content {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+}
+
+.title-section {
+    flex: 1;
+    max-width: 70%;
+}
+
+.sersam-header-main h1 {
+    margin: 0 0 10px 0;
+    font-size: 36px;
+    font-weight: 700;
+}
+.sersam-header-main h1 a {
+    color: white;
+    text-decoration: none;
+}
+
+.sersam-header-main p {
+    margin: 0;
+    font-size: 13px;
+    line-height: 1.5;
+    opacity: 0.9;
+    max-width: 95%;
+}
+
+.location-section {
+    margin-left: 20px;
+    min-width: auto;
+    align-self: flex-start;
+    padding-top: 10px;
+}
+
+.location-border {
+    display: flex;
+    align-items: center;
+    border: 1px solid rgba(255, 255, 255, 0.5);
+    border-radius: 20px;
+    padding: 8px 15px;
+    background-color: rgba(255, 255, 255, 0.2);
+    backdrop-filter: blur(3px);
+}
+
+.location-icon {
+    width: 20px;
+    height: 20px;
+    margin-right: 10px;
+    fill: white;
+}
+
+.location-value {
+    font-size: 14px;
+    font-weight: 500;
+    white-space: nowrap;
+    color: white;
+}
+
+/* Main Content Layout */
+.sersam-content {
+    display: flex;
+    padding: 20px;
+    gap: 20px;
+}
+
+.left-column, .right-column {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+/* Card Styling (General) */
+.card {
+    background-color: #F0F3F0;
+    border-radius: 10px;
+    padding: 20px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+}
+
+.card h2 { /* Untuk judul "Status Sensor" dan "Log Aktivitas" */
+    font-size: 20px;
+    margin-top: 0;
+    margin-bottom: 15px;
+    color: #333;
+    font-weight: 500;
+}
+
+.data-display-card .card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 10px;
+}
+
+.data-display-card .card-header h3 {
+    font-size: 16px;
+    color: #444;
+    font-weight: 500;
+    margin: 0;
+}
+
+.data-display-card .card-header span { /* Untuk tampilan nilai di sebelah judul */
+    font-size: 14px;
+    font-weight: 500;
+    color: #333;
+}
+
+/* Status Sensor Card */
+.status-sensor-card .sensor-list {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.sensor-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 14px;
+    color: #333;
+    padding: 8px 0;
+}
+
+.sensor-icon {
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 14px;
+    font-weight: bold;
+    color: white;
+}
+
+.sensor-icon.check {
+    background-color: #007BFF; /* Biru */
+}
+
+.sensor-icon.alert {
+    background-color: #FF8C00; /* Oranye */
+}
+
+.sensor-icon.inactive {
+    background-color: #6c757d; /* Abu-abu */
+}
+
+
+/* Data Display Cards (Ketinggian Air/Sampah) */
+.level-slider {
+    width: 100%;
+    margin-bottom: 15px;
+    accent-color: #5A7052; /* Sesuaikan dengan warna hijau header */
+    /* pointer-events: none; /* Uncomment jika slider hanya untuk display */
+}
+
+.progress-bar-container {
+    background-color: #E0E0E0;
+    border-radius: 20px;
+    height: 30px;
+    margin-bottom: 8px;
+    overflow: hidden;
+    display: flex;
+    align-items: center;
+    padding: 0 5px;
+}
+
+.progress-bar {
+    height: 100%;
+    border-radius: 20px;
+    display: flex;
+    align-items: center;
+    justify-content: flex-start;
+    padding-left: 15px;
+    color: white;
+    font-size: 13px;
+    font-weight: 500;
+    box-sizing: border-box;
+    transition: width 0.5s ease-in-out;
+}
+
+.progress-bar.water-level-bar {
+    background-color: #007BFF; /* Biru untuk air */
+}
+.progress-bar.trash-level-bar {
+    background-color: #6C757D; /* Abu-abu untuk sampah */
+}
+
+.status-label {
+    display: inline-block; /* Diubah agar float bekerja dengan benar */
+    padding: 5px 0px; /* Disesuaikan agar tidak ada background */
+    font-size: 13px;
+    font-weight: 500;
+    text-align: right;
+    float: right; /* Memposisikan label ke kanan */
+    clear: both; /* Pastikan tidak mengganggu elemen lain */
+    width: auto; /* Biarkan lebar menyesuaikan konten */
+}
+
+.status-label.safe {
+    color: #333; /* Teks gelap */
+}
+
+.status-label.not-full {
+    color: #333; /* Teks gelap */
+}
+.status-label.warning {
+    color: #D32F2F; /* Merah untuk peringatan */
+    font-weight: bold;
+}
+
+/* Log Aktivitas Card */
+.log-activity-card {
+    flex-grow: 1;
+}
+
+.log-container {
+    display: flex;
+    flex-direction: column;
+    gap: 0px; /* Mengurangi gap agar garis lebih rapat */
+    padding-top: 10px;
+    max-height: 300px; /* Batasi tinggi dan aktifkan scroll jika perlu */
+    overflow-y: auto;
+}
+
+.log-entry-item {
+    padding: 8px 5px;
+    color: #333;
+    font-size: 13px;
+    border-bottom: 1px solid #E0E0E0; /* Garis tipis antar entri */
+}
+.log-entry-item:last-child {
+    border-bottom: none;
+}
+
+
+/* Footer */
+footer {
+  text-align: center;
+  padding: 20px;
+  margin-top: 20px;
+  color: #f0f3f0; /* Warna teks terang untuk kontras dengan background body */
+  font-size: 14px;
+}
+
+/* Tambahan untuk ikon sensor ketinggian air dan sampah di bagian "Status Sensor" */
+#sensor_ketinggian_sampah_status_icon,
+#sensor_ketinggian_air_status_icon,
+#sensor_pendeteksi_sampah_status_icon {
+    /* Gaya default sudah di .sensor-icon */
+}

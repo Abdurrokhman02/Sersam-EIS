@@ -169,45 +169,50 @@
 
 #include <WiFi.h>
 #include <WiFiClientSecure.h>
+#include <HTTPClient.h>
 #include <UniversalTelegramBot.h>
 
-// Pin Sensor Ketinggian Air
-#define trigPinWater 5
-#define echoPinWater 18
+// ---------------------- Konstanta Pin ----------------------
+#define trigPinWater 5     // Pin trigger sensor air
+#define echoPinWater 18    // Pin echo sensor air
 
-// Pin Sensor Jarak Sampah
-#define trigPinDist 22
-#define echoPinDist 23
+#define trigPinDist 22     // Pin trigger sensor jarak sampah
+#define echoPinDist 23     // Pin echo sensor jarak sampah
 
-// WiFi & Telegram
-const char* ssid = "Kos ijo";
-const char* password = "Aslan199";
-const char* botToken = "7918196245:AAHZPzSlKy9jYdkK-L5sHdxCc3hvg9O54Ik";
-const char* grup_id = "-4721702872";
+#define trigPinTrash 19     // Pin trigger sensor kapasitas sampah
+#define echoPinTrash 21     // Pin echo sensor kapasitas sampah
 
-// Objek Telegram Bot
+// ---------------------- Konfigurasi WiFi & API ----------------------
+const char* ssid      = "Kos ijo";
+const char* password  = "Aslan199";
+const char* botToken  = "7918196245:AAHZPzSlKy9jYdkK-L5sHdxCc3hvg9O54Ik";
+const char* grup_id   = "-4721702872";
+const char* server    = "http://192.168.1.3/Sersam-EIS/WebMonitoring/api/receive.php";
+
+// ---------------------- Objek & Variabel Global ----------------------
+HTTPClient http;
 WiFiClientSecure client;
 UniversalTelegramBot bot(botToken, client);
 
-// Variabel status ketinggian air
 float lastWaterLevel = -1;
 bool wasInDanger = false;
+float trashLevel = 10.39;
 
-// --------- FUNGSI PENGUKURAN --------------
+// ---------------------- Fungsi Sensor ----------------------
 
-// Hitung ketinggian air
+// Mengukur ketinggian air
 float WaterDistance() {
   digitalWrite(trigPinWater, LOW);
   delayMicroseconds(2);
   digitalWrite(trigPinWater, HIGH);
   delayMicroseconds(10);
   digitalWrite(trigPinWater, LOW);
-  
+
   long duration = pulseIn(echoPinWater, HIGH);
   return duration * 0.034 / 2;
 }
 
-// Satu pembacaan jarak (sampah)
+// Mengukur jarak sampah (sekali baca)
 float readDistance() {
   digitalWrite(trigPinDist, LOW);
   delayMicroseconds(2);
@@ -215,11 +220,23 @@ float readDistance() {
   delayMicroseconds(10);
   digitalWrite(trigPinDist, LOW);
 
-  int duration = pulseIn(echoPinDist, HIGH, 30000); 
-  return duration > 0 ? duration * 0.034 / 2 : -1;
+  float duration = pulseIn(echoPinDist, HIGH, 30000);
+  return (duration > 0) ? duration * 0.034 / 2 : -1;
 }
 
-// Rata-rata beberapa pembacaan jarak
+// Mengukur jarak sampah (sekali baca)
+float trashDistance() {
+  digitalWrite(trigPinTrash, LOW);
+  delayMicroseconds(2);
+  digitalWrite(trigPinTrash, HIGH);
+  delayMicroseconds(10);
+  digitalWrite(trigPinTrash, LOW);
+
+  float duration = pulseIn(echoPinTrash, HIGH, 30000);
+  return (duration > 0) ? duration * 0.034 / 2 : -1;
+}
+
+// Rata-rata pembacaan jarak sampah
 float getFilteredDistance(int n = 5) {
   float total = 0;
   int count = 0;
@@ -232,19 +249,54 @@ float getFilteredDistance(int n = 5) {
     }
     delay(10);
   }
-
   return (count > 0) ? total / count : -1;
 }
 
-// ---------- SETUP ----------
+// Rata-rata pembacaan jarak sampah
+float getFilteredTrashDistance(int n = 5) {
+  float total = 0;
+  int count = 0;
+
+  for (int i = 0; i < n; i++) {
+    float d = trashDistance();
+    if (d > 0) {
+      total += d;
+      count++;
+    }
+    delay(10);
+  }
+  return (count > 0) ? total / count : -1;
+}
+
+// Kirim data ke server
+void sendData(float waterLevel, float trashLevel) {
+  http.begin(server);
+  http.addHeader("Content-Type", "application/x-www-form-urlencoded");
+
+  String postData = "ketinggianair=" + String(waterLevel, 2) + "&kapasitassampah=" + String(trashLevel, 2);
+  int httpCode = http.POST(postData);
+
+  if (httpCode > 0) {
+    Serial.printf("[SERVER] Response: %d\n", httpCode);
+    String response = http.getString();
+    Serial.println(response);
+  } else {
+    Serial.printf("[SERVER] Failed, error: %s\n", http.errorToString(httpCode).c_str());
+  }
+
+  http.end();
+}
+
+// ---------------------- Setup ----------------------
 void setup() {
   Serial.begin(115200);
 
   pinMode(trigPinWater, OUTPUT);
   pinMode(echoPinWater, INPUT);
-
   pinMode(trigPinDist, OUTPUT);
   pinMode(echoPinDist, INPUT);
+  pinMode(trigPinTrash, OUTPUT);
+  pinMode(echoPinTrash, INPUT);
 
   WiFi.begin(ssid, password);
   client.setInsecure(); // Untuk koneksi HTTPS Telegram
@@ -253,47 +305,51 @@ void setup() {
     delay(500);
     Serial.print(".");
   }
-  Serial.println("\nWifi Terhubung!");
+
+  Serial.println("\nWiFi Terhubung!");
 }
 
-// ---------- LOOP ----------
+// ---------------------- Loop ----------------------
 void loop() {
-  // Baca jarak sampah
-  float distance = getFilteredDistance();
+  float distanceLevel = getFilteredDistance();
+  float waterLevel = WaterDistance();
+  float trashLevel = getFilteredTrashDistance();
+  float diff = abs(waterLevel - lastWaterLevel);
+
+  // Output ke Serial Monitor
   Serial.print("Jarak sampah: ");
-  Serial.print(distance);
+  Serial.print(distanceLevel);
   Serial.println(" cm");
 
-  // Baca ketinggian air
-  float water = WaterDistance();
   Serial.print("Ketinggian air: ");
-  Serial.print(water);
+  Serial.print(waterLevel);
+  Serial.println(" cm");
+ 
+  Serial.print("Kapasitas sampah: ");
+  Serial.print(trashLevel);
   Serial.println(" cm");
 
-  float diff = abs(water - lastWaterLevel);
-
-  // Jika air tinggi (<=10cm)
-  if (water <= 10) {
+  // Logika peringatan air tinggi
+  if (waterLevel <= 10) {
     if ((!wasInDanger || diff >= 5) && lastWaterLevel >= 0) {
       String message = "WASPADA!! Ketinggian air ";
-      message += String(water, 2);
+      message += String(waterLevel, 2);
       message += " cm dari permukaan tanah.";
       bot.sendMessage(grup_id, message, "");
     }
     wasInDanger = true;
-  }
-  // Jika air kembali normal
-  else {
-    if (wasInDanger && water > 10) {
+  } else {
+    if (wasInDanger && waterLevel > 10) {
       String message = "Ketinggian air telah kembali normal: ";
-      message += String(water, 2);
+      message += String(waterLevel, 2);
       message += " cm dari permukaan tanah.";
       bot.sendMessage(grup_id, message, "");
     }
     wasInDanger = false;
   }
 
-  lastWaterLevel = water;
-  delay(1000);
-}
+  sendData(waterLevel, trashLevel);
+  lastWaterLevel = waterLevel;
 
+  delay(1000);  // Delay antar pembacaan
+}
