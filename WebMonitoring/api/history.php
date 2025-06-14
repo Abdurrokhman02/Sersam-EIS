@@ -1,20 +1,29 @@
 <?php
-include_once "../config/database.php";
+include_once "../Config/database.php";
 
-// Query untuk mengambil beberapa data terbaru (misal 10)
-$query = "SELECT waktu, aktivitas FROM log_aktivitas ORDER BY waktu DESC LIMIT 10";
+// Query yang sesuai dengan struktur tabel data
+$query = "SELECT waktu, 
+                 CONCAT('Ketinggian Air: ', ketinggianair, ' cm, Kapasitas Sampah: ', kapasitassampah, ' cm') AS aktivitas 
+          FROM data 
+          ORDER BY waktu DESC 
+          LIMIT 10000";
+
 $result = mysqli_query($conn, $query);
 
-$logs = [];
+if (!$result) {
+    // Debugging: Tampilkan error langsung untuk development
+    die(json_encode([
+        'error' => true,
+        'message' => 'Database error: ' . mysqli_error($conn)
+    ]));
+}
 
-if ($result) {
-    while ($row = mysqli_fetch_assoc($result)) {
-        // Pastikan kolom aktivitas dan waktu ada di tabel
-        $logs[] = [
-            'waktu' => $row['waktu'] ?? 'N/A',
-            'aktivitas' => $row['aktivitas'] ?? 'Tidak ada aktivitas'
-        ];
-    }
+$logs = [];
+while ($row = mysqli_fetch_assoc($result)) {
+    $logs[] = [
+        'waktu' => $row['waktu'] ?? 'N/A',
+        'aktivitas' => $row['aktivitas'] ?? 'Tidak ada aktivitas'
+    ];
 }
 
 header('Content-Type: application/json');
