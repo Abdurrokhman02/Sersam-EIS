@@ -1,293 +1,158 @@
-// #include <WiFi.h>
-// #include <WiFiClientSecure.h>
-// #include <UniversalTelegramBot.h>
-
-// // pin yang digunakan
-// // ultrasonik sensor ketinggian air
-// #define trigPinWater 5
-// #define echoPinWater 18
-
-// // jsn jarak sampah
-// #define trigPinDist 22
-// #define echoPinDist 23
-
-// // stepper motor
-// #define DIR  12
-// #define STEP 13
-
-// // const jarak sampah 
-// #define JARAK_SAMPAH_MAKS 30
-
-// // Konfigurasi Wifi dan Telegram
-// const char* ssid = "Kos ijo";
-// const char* password = "Aslan199";
-// const char* botToken = "7918196245:AAHZPzSlKy9jYdkK-L5sHdxCc3hvg9O54Ik";
-// const char* grup_id = "-4721702872";
-
-// // inisialisasi library 
-// WiFiClientSecure client;
-// UniversalTelegramBot bot(botToken, client);
-
-// // variabel global untuk menyimpan ketinggian air sebelumnya
-// float lastWaterLevel = -1;
-
-// bool wasInDanger = false; // status air sebelumnya
-
-// // Inisialisasi stepper (tipe DRIVER: hanya STEP & DIR)
-// // AccelStepper stepper(AccelStepper::DRIVER, STEP, DIR);
-
-// // Variabel waktu untuk logika delay berhenti motor
-// unsigned long waktuTerakhirDekat = 0;
-// const unsigned long delayBerhenti = 2000;
-
-// // perhitungan sensor ultrasonik untuk ketinggian air
-// float WaterDistance(){
-//   digitalWrite(trigPinWater, LOW);
-//   delayMicroseconds(2);
-//   digitalWrite(trigPinWater, HIGH);
-//   delayMicroseconds(10);
-//   digitalWrite(trigPinWater, LOW);
-  
-//   // rumusnya
-//   long duration = pulseIn(echoPinWater, HIGH);
-//   return duration * 0.034 / 2;
-// }
-
-// // Fungsi baca jarak ultrasonik (satu kali pembacaan)
-// float readDistance() {
-//   digitalWrite(trigPinDist, LOW);            // Bersihkan sinyal trigger
-//   delayMicroseconds(2);
-//   digitalWrite(trigPinDist, HIGH);           // Kirim pulsa trigger 10 mikrodetik
-//   delayMicroseconds(10);
-//   digitalWrite(trigPinDist, LOW);
-
-//   // Baca durasi pantulan echo (maks 30ms untuk timeout)
-//   int duration = pulseIn(echoPinDist, HIGH, 30000); 
-
-//   // Jika ada hasil, konversi ke cm, jika tidak return -1
-//   return duration > 0 ? duration * 0.034 / 2 : -1;
-// }
-
-// // Fungsi filter jarak (rata-rata beberapa pembacaan)
-// float getFilteredDistance(int n = 5) {
-//   float total = 0;
-//   int count = 0;
-
-//   // Ambil n pembacaan dan hitung rata-rata
-//   for (int i = 0; i < n; i++) {
-//     float d = readDistance();
-//     if (d > 0) {
-//       total += d;
-//       count++;
-//     }
-//     delay(10);  // Delay singkat antar pembacaan
-//   }
-
-//   return (count > 0) ? total / count : -1;  // Hindari pembagian nol
-// }
-
-// void setup() {
-//   Serial.begin(115200);
-
-//   // ultrasonik sensorn ketinggian air
-//   pinMode(trigPinWater, OUTPUT);
-//   pinMode(echoPinWater, INPUT);
-
-//   // jsn untuk jarak sampah
-//   pinMode(trigPinDist, OUTPUT);         
-//   pinMode(echoPinDist, INPUT);           
-  
-//   // Menyambungkan WiFI
-//   WiFi.begin(ssid, password);
-//   client.setInsecure();
-//   while (WiFi.status() != WL_CONNECTED) {
-//     delay(500);
-//     Serial.print(".");
-//   }
-//   Serial.print("Wifi Terhubung!");
-// }
-
-// void loop() {
-//   // -----------------------------
-//   // Bagian 1: Pengukuran Jarak Sampah & Kendali Stepper
-//   // -----------------------------
-//   float distance = getFilteredDistance();         // Jarak ke sampah
-//   unsigned long sekarang = millis();              // Waktu sekarang (ms)
-
-//   if (distance <= 200 && distance > 0) {
-//     waktuTerakhirDekat = sekarang;                // Perbarui waktu deteksi terakhir
-//     stepper.setSpeed(500);                        // Konveyor jalan
-//   } else {
-//     if (sekarang - waktuTerakhirDekat < delayBerhenti) {
-//       stepper.setSpeed(500);                      // Masih dalam jeda: jalan terus
-//     } else {
-//       stepper.setSpeed(0);                        // Lewat jeda: berhenti
-//     }
-//   }
-
-//   stepper.runSpeed();  // WAJIB dipanggil di setiap loop untuk motor jalan
-
-//   // -----------------------------
-//   // Bagian 2: Monitoring Ketinggian Air & Kirim Telegram
-//   // -----------------------------
-//   float water = WaterDistance();  // Dapatkan ketinggian air
-//   Serial.print("ketinggian air: ");
-//   Serial.print(water);
-//   Serial.println(" cm");
-
-//   float diff = abs(water - lastWaterLevel);  // Selisih terhadap data sebelumnya
-
-//   // Jika air sangat tinggi (<=10 cm ke sensor)
-//   if (water <= 10) {
-//     if ((!wasInDanger || diff >= 5) && lastWaterLevel >= 0) {
-//       String message = "WASPADA!! Ketinggian air ";
-//       message += String(water, 2);
-//       message += " cm dari permukaan tanah.";
-//       bot.sendMessage(grup_id, message, "");
-//     }
-//     wasInDanger = true;
-//   } 
-//   // Jika air kembali normal (>10 cm)
-//   else {
-//     if (wasInDanger && water > 10) {
-//       String message = "Ketinggian air telah kembali normal: ";
-//       message += String(water, 2);
-//       message += " cm dari permukaan tanah.";
-//       bot.sendMessage(grup_id, message, "");
-//     }
-//     wasInDanger = false;
-//   }
-
-//   lastWaterLevel = water;
-
-//   delay(1000);  // Delay kecil, cukup aman untuk aplikasi ini
-// }
-
-
-// INI KODE TANPA STEPPER MOTOR
-
-
 #include <WiFi.h>
 #include <WiFiClientSecure.h>
 #include <HTTPClient.h>
 #include <UniversalTelegramBot.h>
+#include <SERSAMOTA.h>
 
-// ---------------------- Konstanta Pin ----------------------
-#define trigPinWater 5     // Pin trigger sensor air
-#define echoPinWater 18    // Pin echo sensor air
+// -----------------Sensor & aktuator Pin-------------------------
+#define trigPinWater 5
+#define echoPinWater 18
+#define trigPinDist 22
+#define echoPinDist 23
+#define trigPinTrash 19
+#define echoPinTrash 21
+#define STEP_PIN 13
+#define DIR_PIN 12
+#define ENABLE_PIN 14
+#define MICROSTEPPING 4
+#define STEPS_PER_REV 200
 
-#define trigPinDist 22     // Pin trigger sensor jarak sampah
-#define echoPinDist 23     // Pin echo sensor jarak sampah
+// ----------------------------Connection--------------------------
 
-#define trigPinTrash 19     // Pin trigger sensor kapasitas sampah
-#define echoPinTrash 21     // Pin echo sensor kapasitas sampah
+const char* ssid = "Esthe";
+const char* password = "RJSPQLBS";
 
-// ---------------------- Konfigurasi WiFi & API ----------------------
-const char* ssid      = "Kos ijo";
-const char* password  = "Aslan199";
-const char* botToken  = "7918196245:AAHZPzSlKy9jYdkK-L5sHdxCc3hvg9O54Ik";
-const char* grup_id   = "-4721702872";
-const char* server    = "http://192.168.1.3/Sersam-EIS/WebMonitoring/api/receive.php";
+// -----------------------------Server dan Telegram---------------
+const char* botToken = "7918196245:AAHZPzSlKy9jYdkK-L5sHdxCc3hvg9O54Ik";
+const char* grup_id = "-4721702872";
+const char* server = "https://abdurrokhman.my.id/Sersam/api/receive.php";
 
-// ---------------------- Objek & Variabel Global ----------------------
-HTTPClient http;
+// -----------------------------Objek------------------------------
 WiFiClientSecure client;
 UniversalTelegramBot bot(botToken, client);
+HTTPClient http;
+SERSAMOTA ota("SERSAM", 8080);
 
-float lastWaterLevel = -1;
-bool wasInDanger = false;
-float trashLevel = 10.39;
+// -----------------------------Global-----------------------------
+// PENTING: Gunakan 'volatile' untuk variabel yang diakses oleh banyak task/core
+volatile float waterLevel = -1, trashLevel = -1, distanceLevel = -1, lastWaterLevel = -1;
+volatile bool wasInDanger = false;
+volatile unsigned long waktuTerakhirDekat = 0;
+const unsigned long delayBerhenti = 2000;
 
-// ---------------------- Fungsi Sensor ----------------------
-
-// Mengukur ketinggian air
-float WaterDistance() {
-  digitalWrite(trigPinWater, LOW);
-  delayMicroseconds(2);
-  digitalWrite(trigPinWater, HIGH);
-  delayMicroseconds(10);
-  digitalWrite(trigPinWater, LOW);
-
-  long duration = pulseIn(echoPinWater, HIGH);
-  return duration * 0.034 / 2;
-}
-
-// Mengukur jarak sampah (sekali baca)
-float readDistance() {
-  digitalWrite(trigPinDist, LOW);
-  delayMicroseconds(2);
-  digitalWrite(trigPinDist, HIGH);
-  delayMicroseconds(10);
-  digitalWrite(trigPinDist, LOW);
-
-  float duration = pulseIn(echoPinDist, HIGH, 30000);
+// ------------------ BACA ULTRASONIK -----------------------------
+float ultrasonicRead(int trig, int echo) {
+  digitalWrite(trig, LOW); delayMicroseconds(2);
+  digitalWrite(trig, HIGH); delayMicroseconds(10);
+  digitalWrite(trig, LOW);
+  float duration = pulseIn(echo, HIGH, 30000); // 30ms timeout
   return (duration > 0) ? duration * 0.034 / 2 : -1;
 }
 
-// Mengukur jarak sampah (sekali baca)
-float trashDistance() {
-  digitalWrite(trigPinTrash, LOW);
-  delayMicroseconds(2);
-  digitalWrite(trigPinTrash, HIGH);
-  delayMicroseconds(10);
-  digitalWrite(trigPinTrash, LOW);
-
-  float duration = pulseIn(echoPinTrash, HIGH, 30000);
-  return (duration > 0) ? duration * 0.034 / 2 : -1;
+int calculateStepDelay(int rpm) {
+  float step_frequency = (rpm / 60.0) * STEPS_PER_REV * MICROSTEPPING;
+  return 1000000 / step_frequency;
 }
 
-// Rata-rata pembacaan jarak sampah
-float getFilteredDistance(int n = 5) {
-  float total = 0;
-  int count = 0;
+void stepMotor(int steps, int rpm, bool clockwise = true) {
+  digitalWrite(ENABLE_PIN, LOW);       // Aktifkan driver
+  digitalWrite(DIR_PIN, clockwise ? HIGH : LOW);   // Arah putaran
+  int delayMicros = calculateStepDelay(rpm);
 
-  for (int i = 0; i < n; i++) {
-    float d = readDistance();
-    if (d > 0) {
-      total += d;
-      count++;
+  for (int i = 0; i < steps; i++) {
+    digitalWrite(STEP_PIN, HIGH);
+    delayMicroseconds(delayMicros);
+    digitalWrite(STEP_PIN, LOW);
+    delayMicroseconds(delayMicros);
+  }
+}
+
+
+// ------------------ TASK SENSOR -----------------------------
+void taskSensor(void *param) {
+  while (1) {
+    // Membaca nilai sensor dan menyimpannya ke variabel volatile
+    waterLevel = ultrasonicRead(trigPinWater, echoPinWater);
+    distanceLevel = ultrasonicRead(trigPinDist, echoPinDist);
+    trashLevel = ultrasonicRead(trigPinTrash, echoPinTrash);
+    vTaskDelay(500 / portTICK_PERIOD_MS);
+  }
+}
+
+// ------------------ TASK STEPPER ---------------------------
+void taskStepper(void *param) {
+  while (1) {
+    unsigned long sekarang = millis();
+
+    // Membaca nilai dari variabel volatile
+    if (distanceLevel <= 50 && distanceLevel > 0) {
+      waktuTerakhirDekat = sekarang;
+      stepMotor(50, 60); // contoh: 50 langkah dengan 60 RPM
+    } else {
+      if (sekarang - waktuTerakhirDekat < delayBerhenti) {
+        stepMotor(20, 30); // gerak pelan sebentar
+      }
+      // Jika sudah lewat waktu, tidak gerak sama sekali
     }
-    delay(10);
+
+    vTaskDelay(10 / 
+    );
   }
-  return (count > 0) ? total / count : -1;
 }
 
-// Rata-rata pembacaan jarak sampah
-float getFilteredTrashDistance(int n = 5) {
-  float total = 0;
-  int count = 0;
+// ------------------ TASK KOMUNIKASI -----------------------
+void taskKomunikasi(void *param) {
+  while (1) {
+    // Membaca nilai dari variabel volatile
+    float diff = abs(waterLevel - lastWaterLevel);
 
-  for (int i = 0; i < n; i++) {
-    float d = trashDistance();
-    if (d > 0) {
-      total += d;
-      count++;
+    Serial.printf("Jarak sampah: %.2f cm\n", distanceLevel);
+    Serial.printf("Ketinggian air: %.2f cm\n", waterLevel);
+    Serial.printf("Kapasitas sampah: %.2f cm\n", trashLevel);
+
+    if (waterLevel <= 10 && waterLevel > 0) { // Menambahkan pengecekan > 0 untuk data valid
+      if ((!wasInDanger || diff >= 5) && lastWaterLevel >= 0) {
+        String message = "WASPADA!! Ketinggian air " + String(waterLevel, 2) + " cm dari permukaan tanah.";
+        bot.sendMessage(grup_id, message, "");
+      }
+      wasInDanger = true;
+    } else {
+      if (wasInDanger && waterLevel > 10) {
+        String message = "Ketinggian air telah kembali normal: " + String(waterLevel, 2) + " cm.";
+        bot.sendMessage(grup_id, message, "");
+      }
+      wasInDanger = false;
     }
-    delay(10);
+
+    // Hanya kirim data jika valid (bukan -1)
+    if (waterLevel > 0 && trashLevel > 0) {
+        http.begin(server);
+        http.addHeader("Content-Type", "application/x-www-form-urlencoded");
+        String postData = "ketinggianair=" + String(waterLevel, 2) + "&kapasitassampah=" + String(trashLevel, 2);
+        int httpCode = http.POST(postData);
+        if (httpCode > 0) {
+          Serial.printf("[SERVER] Response: %d\n", httpCode);
+          Serial.println(http.getString());
+        } else {
+          Serial.printf("[SERVER] Failed, error: %s\n", http.errorToString(httpCode).c_str());
+        }
+        http.end();
+    }
+
+    lastWaterLevel = waterLevel;
+    vTaskDelay(3000 / portTICK_PERIOD_MS);
   }
-  return (count > 0) ? total / count : -1;
 }
 
-// Kirim data ke server
-void sendData(float waterLevel, float trashLevel) {
-  http.begin(server);
-  http.addHeader("Content-Type", "application/x-www-form-urlencoded");
-
-  String postData = "ketinggianair=" + String(waterLevel, 2) + "&kapasitassampah=" + String(trashLevel, 2);
-  int httpCode = http.POST(postData);
-
-  if (httpCode > 0) {
-    Serial.printf("[SERVER] Response: %d\n", httpCode);
-    String response = http.getString();
-    Serial.println(response);
-  } else {
-    Serial.printf("[SERVER] Failed, error: %s\n", http.errorToString(httpCode).c_str());
+// ------------------ TASK OTA HANDLE -------------------------
+void taskOTA(void *param) {
+  while (1) {
+    ota.handle();
+    vTaskDelay(100 / portTICK_PERIOD_MS);
   }
-
-  http.end();
 }
 
-// ---------------------- Setup ----------------------
+// ------------------ SETUP -----------------------------------
 void setup() {
   Serial.begin(115200);
 
@@ -297,59 +162,50 @@ void setup() {
   pinMode(echoPinDist, INPUT);
   pinMode(trigPinTrash, OUTPUT);
   pinMode(echoPinTrash, INPUT);
+  pinMode(STEP_PIN, OUTPUT);
+  pinMode(DIR_PIN, OUTPUT);
+  pinMode(ENABLE_PIN, OUTPUT);
+  digitalWrite(ENABLE_PIN, HIGH); // Mulai dengan menonaktifkan driver untuk hemat daya
 
   WiFi.begin(ssid, password);
-  client.setInsecure(); // Untuk koneksi HTTPS Telegram
+  client.setInsecure();
 
+  Serial.print("Connecting to WiFi");
   while (WiFi.status() != WL_CONNECTED) {
     delay(500);
     Serial.print(".");
   }
-
   Serial.println("\nWiFi Terhubung!");
-}
 
-// ---------------------- Loop ----------------------
-void loop() {
-  float distanceLevel = getFilteredDistance();
-  float waterLevel = WaterDistance();
-  float trashLevel = getFilteredTrashDistance();
-  float diff = abs(waterLevel - lastWaterLevel);
+  // OTA Configuration
+  ota.setOTAPassword("sersam123");
+  ota.enableSerialDebug(true);
+  ota.enableMDNS(true);
+  
+  // (Fungsi callback OTA tetap sama)
+  ota.onStart([]() { Serial.println("OTA Update Started!"); });
+  ota.onEnd([]() { Serial.println("OTA Update Finished!"); });
+  ota.onProgress([](unsigned int progress, unsigned int total) { Serial.printf("OTA Progress: %u%%\n", (progress * 100) / total); });
+  ota.onError([](ota_error_t error) { Serial.printf("OTA Error: %u\n", error); });
+  ota.onWiFiConnected([]() { Serial.println("WiFi Connected - OTA Ready!"); });
+  ota.onWiFiDisconnected([]() { Serial.println("WiFi Disconnected - OTA Not Available"); });
+  ota.onWebUpdateStart([]() { Serial.println("Web Update Started!"); });
+  ota.onWebUpdateEnd([](bool success) { Serial.println(success ? "Web Update Successful!" : "Web Update Failed!"); });
 
-  // Output ke Serial Monitor
-  Serial.print("Jarak sampah: ");
-  Serial.print(distanceLevel);
-  Serial.println(" cm");
-
-  Serial.print("Ketinggian air: ");
-  Serial.print(waterLevel);
-  Serial.println(" cm");
- 
-  Serial.print("Kapasitas sampah: ");
-  Serial.print(trashLevel);
-  Serial.println(" cm");
-
-  // Logika peringatan air tinggi
-  if (waterLevel <= 10) {
-    if ((!wasInDanger || diff >= 5) && lastWaterLevel >= 0) {
-      String message = "WASPADA!! Ketinggian air ";
-      message += String(waterLevel, 2);
-      message += " cm dari permukaan tanah.";
-      bot.sendMessage(grup_id, message, "");
-    }
-    wasInDanger = true;
+  if (ota.begin(ssid, password)) {
+    Serial.println("OTA Service Started Successfully!");
+    Serial.println("Upload URL: " + ota.getUploadURL());
   } else {
-    if (wasInDanger && waterLevel > 10) {
-      String message = "Ketinggian air telah kembali normal: ";
-      message += String(waterLevel, 2);
-      message += " cm dari permukaan tanah.";
-      bot.sendMessage(grup_id, message, "");
-    }
-    wasInDanger = false;
+    Serial.println("Failed to start OTA service!");
   }
 
-  sendData(waterLevel, trashLevel);
-  lastWaterLevel = waterLevel;
+  // FreeRTOS Tasks
+  xTaskCreatePinnedToCore(taskSensor, "Sensor", 4096, NULL, 2, NULL, 1);       // Prioritas lebih tinggi
+  xTaskCreatePinnedToCore(taskStepper, "Stepper", 4096, NULL, 1, NULL, 0);
+  xTaskCreatePinnedToCore(taskKomunikasi, "Komunikasi", 8192, NULL, 1, NULL, 1);
+  xTaskCreatePinnedToCore(taskOTA, "OTA", 4096, NULL, 1, NULL, 1);
+}
 
-  delay(1000);  // Delay antar pembacaan
+void loop() {
+  // Tidak perlu digunakan karena semua fungsi jalan di FreeRTOS
 }

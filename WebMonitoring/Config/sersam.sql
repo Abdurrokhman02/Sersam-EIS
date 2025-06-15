@@ -32,7 +32,7 @@ CREATE TABLE `data` (
   `waktu` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
   `ketinggianair` double NOT NULL,
   `kapasitassampah` double NOT NULL
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
 -- Dumping data for table `data`

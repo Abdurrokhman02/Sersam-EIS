@@ -1,5 +1,5 @@
 <?php
-include_once "../Config/database.php";
+include_once "../config/database.php";
 
 $query = "SELECT * FROM data ORDER BY waktu DESC LIMIT 1";
 $result = mysqli_query($conn, $query);

@@ -1,5 +1,5 @@
 <?php
-include_once "../Config/database.php";
+include_once "../config/database.php";
 
 if (isset($_POST['ketinggianair']) && isset($_POST['kapasitassampah'])) {
     $ketinggianAir = mysqli_real_escape_string($conn, $_POST['ketinggianair']);

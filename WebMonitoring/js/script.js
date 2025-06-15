@@ -145,39 +145,47 @@ document.addEventListener('DOMContentLoaded', function () {
             });
     }
 
-    function fetchLogAktivitas() {
-        fetch('api/history.php')
-            .then(response => {
-                if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
-                return response.json();
-            })
-            .then(data => {
-                const logContainer = document.getElementById('log_activity_container');
-                if (logContainer) {
-                    logContainer.innerHTML = ''; // Bersihkan log sebelumnya
-                    if (Array.isArray(data) && data.length > 0) {
-                        data.forEach(entry => {
-                            const logEntryDiv = document.createElement('div');
-                            logEntryDiv.classList.add('log-entry-item');
-                            logEntryDiv.textContent = `${entry.waktu || 'No timestamp'} - ${entry.aktivitas || 'No activity'}`;
-                            logContainer.appendChild(logEntryDiv);
-                        });
-                    } else {
-                        const noLogEntry = document.createElement('div');
-                        noLogEntry.classList.add('log-entry-item');
-                        noLogEntry.textContent = 'Tidak ada aktivitas tercatat.';
-                        logContainer.appendChild(noLogEntry);
-                    }
-                }
-            })
-            .catch(error => {
-                console.error("Gagal mengambil log aktivitas:", error);
-                const logContainer = document.getElementById('log_activity_container');
-                if (logContainer) {
-                    logContainer.innerHTML = '<div class="log-entry-item">Gagal memuat log aktivitas.</div>';
-                }
-            });
-    }
+function fetchLogAktivitas() {
+    fetch('api/history.php')
+        .then(response => {
+            if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+            return response.json();
+        })
+        .then(data => {
+            const logContainer = document.getElementById('log_activity_container');
+            
+            if (!logContainer) return;
+            
+            logContainer.innerHTML = '';
+            
+            if (data.error) {
+                // Tampilkan error dari server
+                logContainer.innerHTML = `<div class="log-entry-item error">${data.message}</div>`;
+                return;
+            }
+            
+            if (Array.isArray(data) && data.length > 0) {
+                data.forEach(entry => {
+                    const logEntry = document.createElement('div');
+                    logEntry.className = 'log-entry-item';
+                    logEntry.innerHTML = `
+                        <span class="log-time">${entry.waktu}</span>
+                        <span class="log-message">${entry.aktivitas}</span>
+                    `;
+                    logContainer.appendChild(logEntry);
+                });
+            } else {
+                logContainer.innerHTML = '<div class="log-entry-item">Tidak ada data aktivitas</div>';
+            }
+        })
+        .catch(error => {
+            console.error("Error fetching logs:", error);
+            const logContainer = document.getElementById('log_activity_container');
+            if (logContainer) {
+                logContainer.innerHTML = `<div class="log-entry-item error">Gagal memuat log: ${error.message}</div>`;
+            }
+        });
+}
 
     // Listener untuk slider (jika interaksi manual diizinkan)
     if (waterLevelSlider) {

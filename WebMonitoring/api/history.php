@@ -1,5 +1,5 @@
 <?php
-include_once "../Config/database.php";
+include_once "../config/database.php";
 
 // Query yang sesuai dengan struktur tabel data
 $query = "SELECT waktu, 
